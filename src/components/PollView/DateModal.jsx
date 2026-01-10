@@ -1,0 +1,175 @@
+import { useState } from 'react';
+import VoteButton from './VoteButton';
+import CommentSection from './CommentSection';
+import { formatDate } from '../../utils/dateHelpers';
+import { getVoteSummary } from '../../utils/pollHelpers';
+
+function DateModal({ dateData, pollId, voterName, onVote, onComment, onClose }) {
+  const [loading, setLoading] = useState(false);
+  const [justVoted, setJustVoted] = useState(false);
+  const [votingFor, setVotingFor] = useState(null);
+
+  if (!dateData) return null;
+
+  // Find current user's vote
+  const currentUserVote = dateData.votes.find(
+    (v) => v.voterName === voterName
+  );
+
+  const voteSummary = getVoteSummary(dateData.votes);
+
+  const handleVote = async (response) => {
+    if (!voterName) return;
+
+    setLoading(true);
+    setVotingFor(response);
+
+    try {
+      await onVote(dateData.id, response);
+      setJustVoted(true);
+      // Keep success message visible - don't auto-hide
+    } catch (error) {
+      console.error('Error voting:', error);
+      alert('Failed to vote. Please try again.');
+      setJustVoted(false);
+    } finally {
+      setLoading(false);
+      setVotingFor(null);
+    }
+  };
+
+  // Show the vote that's being processed, or the actual vote
+  const displayedVote = votingFor || currentUserVote?.response;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-start">
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {formatDate(dateData.date)}
+            </h3>
+            <div className="flex gap-4 mt-2 text-sm">
+              <span className="text-green-600 font-medium">
+                {voteSummary.yes} Yes
+              </span>
+              <span className="text-yellow-600 font-medium">
+                {voteSummary.maybe} Maybe
+              </span>
+              <span className="text-red-600 font-medium">
+                {voteSummary.no} No
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-3xl leading-none font-light"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-6 space-y-6">
+          {/* Vote Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-lg font-semibold text-gray-900">
+                Cast Your Vote
+              </h4>
+              {currentUserVote && !loading && (
+                <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                  {currentUserVote.response === 'yes' && '✓ You voted Yes'}
+                  {currentUserVote.response === 'maybe' && '? You voted Maybe'}
+                  {currentUserVote.response === 'no' && '✗ You voted No'}
+                </span>
+              )}
+            </div>
+
+            {/* Instruction Banner */}
+            {voterName && !currentUserVote && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-3">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Click a button below to vote.</strong> Your vote will be saved immediately.
+                </p>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {justVoted && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-3">
+                <p className="text-sm text-green-800 font-medium">
+                  ✓ Vote saved! The calendar will update automatically.
+                </p>
+              </div>
+            )}
+
+            {voterName ? (
+              <div className="flex gap-2">
+                <VoteButton
+                  response="yes"
+                  currentVote={displayedVote}
+                  onClick={handleVote}
+                  loading={loading}
+                />
+                <VoteButton
+                  response="maybe"
+                  currentVote={displayedVote}
+                  onClick={handleVote}
+                  loading={loading}
+                />
+                <VoteButton
+                  response="no"
+                  currentVote={displayedVote}
+                  onClick={handleVote}
+                  loading={loading}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 italic bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                Please enter your name at the top of the page to vote
+              </p>
+            )}
+
+            {currentUserVote && !loading && !justVoted && (
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Your vote is shown by the filled button. Click a different button to change it.
+              </p>
+            )}
+          </div>
+
+          {/* Comments Section */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-3">
+              Comments ({dateData.comments.length})
+            </h4>
+            <CommentSection
+              comments={dateData.comments}
+              pollId={pollId}
+              dateId={dateData.id}
+              voterName={voterName}
+              onComment={onComment}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="w-full bg-gray-600 text-white font-medium py-3 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DateModal;
