@@ -9,6 +9,7 @@ import CopyLink from '../shared/CopyLink';
 import Calendar from './Calendar';
 import DateModal from './DateModal';
 import Results from '../Results/Results';
+import confetti from 'canvas-confetti';
 
 function PollView() {
   const { pollId } = useParams();
@@ -40,6 +41,13 @@ function PollView() {
     if (tempName.trim()) {
       setVoterName(tempName.trim());
       setTempName('');
+
+      // 🎉 Celebration confetti when name is saved!
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     }
   };
 
@@ -114,11 +122,11 @@ function PollView() {
           </div>
         </div>
       ) : (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 animate-bounce-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-lg">
-                ✓
+                ✨
               </div>
               <div>
                 <p className="text-sm text-green-700 font-medium">

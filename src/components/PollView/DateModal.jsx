@@ -3,6 +3,7 @@ import VoteButton from './VoteButton';
 import CommentSection from './CommentSection';
 import { formatDate } from '../../utils/dateHelpers';
 import { getVoteSummary } from '../../utils/pollHelpers';
+import confetti from 'canvas-confetti';
 
 function DateModal({ dateData, pollId, voterName, onVote, onComment, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,35 @@ function DateModal({ dateData, pollId, voterName, onVote, onComment, onClose }) 
     try {
       await onVote(dateData.id, response);
       setJustVoted(true);
+
+      // 🎊 Different celebrations based on vote type!
+      if (response === 'yes') {
+        // Green sparkles for YES
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          colors: ['#10b981', '#34d399', '#6ee7b7'],
+          origin: { y: 0.7 }
+        });
+      } else if (response === 'maybe') {
+        // Yellow stars for MAYBE
+        confetti({
+          particleCount: 60,
+          spread: 50,
+          colors: ['#eab308', '#facc15', '#fde047'],
+          shapes: ['star'],
+          origin: { y: 0.7 }
+        });
+      } else if (response === 'no') {
+        // Subtle red effect for NO
+        confetti({
+          particleCount: 40,
+          spread: 40,
+          colors: ['#ef4444', '#f87171'],
+          ticks: 100,
+          origin: { y: 0.7 }
+        });
+      }
       // Keep success message visible - don't auto-hide
     } catch (error) {
       console.error('Error voting:', error);
@@ -102,9 +132,9 @@ function DateModal({ dateData, pollId, voterName, onVote, onComment, onClose }) 
 
             {/* Success Message */}
             {justVoted && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-3">
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-3 animate-bounce-in">
                 <p className="text-sm text-green-800 font-medium">
-                  ✓ Vote saved! The calendar will update automatically.
+                  ✨ Vote saved! The calendar will update automatically.
                 </p>
               </div>
             )}

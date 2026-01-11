@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPoll } from '../../utils/pollHelpers';
 import { generateDateRange } from '../../utils/dateHelpers';
+import confetti from 'canvas-confetti';
 
 function CreatePoll() {
   const [title, setTitle] = useState('');
@@ -46,8 +47,38 @@ function CreatePoll() {
       // Create poll in Firebase
       const pollId = await createPoll(title, dates);
 
-      // Navigate to the poll page
-      navigate(`/poll/${pollId}`);
+      // 🎆 Fireworks celebration for creating a poll!
+      const duration = 1500;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          // Navigate to the poll page after fireworks
+          navigate(`/poll/${pollId}`);
+          return;
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+      }, 250);
     } catch (err) {
       console.error('Error creating poll:', err);
       setError('Failed to create poll. Please try again.');
