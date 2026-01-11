@@ -5,7 +5,6 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { addVote, addComment } from '../../utils/pollHelpers';
 import { sortDates } from '../../utils/dateHelpers';
 import Loading from '../shared/Loading';
-import CopyLink from '../shared/CopyLink';
 import Calendar from './Calendar';
 import DateModal from './DateModal';
 import Results from '../Results/Results';
@@ -78,10 +77,30 @@ function PollView() {
     <div className="space-y-6">
       {/* Poll Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">{poll.title}</h2>
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-3xl font-bold text-gray-900">{poll.title}</h2>
 
-        {/* Share Link */}
-        <CopyLink url={pollUrl} />
+          {/* Subtle Share Button */}
+          <button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(pollUrl);
+                // Simple feedback without intrusive message
+                const btn = document.activeElement;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                  btn.textContent = originalText;
+                }, 2000);
+              } catch (err) {
+                console.error('Failed to copy:', err);
+              }
+            }}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
+          >
+            📋 Share Poll
+          </button>
+        </div>
       </div>
 
       {/* Name Input Section - Prominent and Clear */}
@@ -150,9 +169,6 @@ function PollView() {
         </div>
       )}
 
-      {/* Results Summary */}
-      <Results dates={sortedDates} />
-
       {/* Calendar View */}
       <div>
         <h3 className="text-2xl font-bold text-gray-900 mb-4">
@@ -164,6 +180,9 @@ function PollView() {
           onDateClick={handleDateClick}
         />
       </div>
+
+      {/* Results Summary - Below Calendar */}
+      <Results dates={sortedDates} />
 
       {/* Date Modal */}
       {selectedDate && (
